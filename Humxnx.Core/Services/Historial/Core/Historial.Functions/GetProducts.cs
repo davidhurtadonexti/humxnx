@@ -12,11 +12,11 @@ namespace Humxnx.Historial.Core.Functions
 {
     public static class GetProducts
     {
-        private readonly IServicioBase<Producto,Guid> _productService;
+        // private readonly IServicioBase<Producto,Guid> _productService;
 
         public static void CalculateCircleAreaFunction(IServicioBase<Producto,Guid> productService)
         {
-            _productService = productService;
+            // _productService = productService;
         }
 
         [FunctionName("GetProducts")]

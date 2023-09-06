@@ -13,7 +13,6 @@ public static class ReceiveMessageFunction
     [FunctionName("ReceiveMessage")]
     public static void Run(
         [ServiceBusTrigger("success_order_queue", Connection = "AzureServiceBusConnectionString")] string message,
-        // [HttpTrigger(AuthorizationLevel.Function, "get", Route = "receive-message")] HttpRequest req,
         ILogger logger)
     {
 
