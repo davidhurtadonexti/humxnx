@@ -5,7 +5,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
