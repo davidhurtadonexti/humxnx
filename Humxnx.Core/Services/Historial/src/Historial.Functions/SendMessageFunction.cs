@@ -13,20 +13,18 @@ namespace Humxnx.Historial.Core.Functions;
 
 public static class SendMessageFunction
 {
+
+
     [FunctionName("SendMessageFunction")]
     public static async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "send-message")] HttpRequest req,
         ILogger logger)
     {
-        IConfigurationRoot configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .Build();
-        string connectionString = configuration.GetConnectionString("AzureServiceBusConnectionString");
-        string queueName = "success_order_queue"; // Reemplaza con el nombre de tu cola
-        logger.LogInformation($"C# HTTP trigger function processed a request.");
-
+        string connectionString = Environment.GetEnvironmentVariable("AzureServiceBusConnectionString");
+        string queueName = "success_order_queue"; 
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        await using var client = new ServiceBusClient("Endpoint=sb://humana-queue-dev.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=t+5hbC+q9libg/wYqukzSH5iN7MtdgGzN+ASbCgDM78=");
+        await using var client = new ServiceBusClient(connectionString);
+
         var sender = client.CreateSender(queueName);
 
         try
@@ -34,7 +32,7 @@ public static class SendMessageFunction
             var message = new ServiceBusMessage(requestBody);
             await sender.SendMessageAsync(message);
             logger.LogInformation( "Mensaje enviado con éxito.");
-            return new OkObjectResult($"Mensaje enviado: {message}");
+            return new OkObjectResult($"Mensaje enviado");
         }
         catch (Exception ex)
         {

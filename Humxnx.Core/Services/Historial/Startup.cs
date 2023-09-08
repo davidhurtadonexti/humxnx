@@ -3,9 +3,11 @@ using Humxnx.Historial.Core.Application.Interfaces;
 using Humxnx.Historial.Core.Application.Services;
 using Humxnx.Historial.Core.Domain.Entities;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-// [assembly: FunctionsStartup(typeof(Humxnx.Startup))]
+
+[assembly: FunctionsStartup(typeof(Humxnx.Historial.Startup))]
 
 namespace Humxnx.Historial
 {
@@ -13,11 +15,22 @@ namespace Humxnx.Historial
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            // Aquí es donde registrarás las extensiones necesarias.
-            // Por ejemplo, para Azure Storage:
-            // builder.Services.AddAzureStorage();
-            // builder.Services.AddServiceBus();
+            var configuration = BuildConfiguration(builder.GetContext().ApplicationRootPath);
+            builder.Services.Configure<IConfiguration>(configuration);
              builder.Services.AddScoped<IServicioBase<Producto,Guid>, ProductoServicio>();
+        }
+
+        private IConfiguration BuildConfiguration(string applicationRootPath)
+        {
+            var config =
+                new ConfigurationBuilder()
+                    .SetBasePath(applicationRootPath)
+                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                    .AddJsonFile("settings.json", optional: true, reloadOnChange: true)
+                    .AddEnvironmentVariables()
+                    .Build();
+
+            return config;
         }
     }
 }
