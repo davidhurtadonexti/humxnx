@@ -29,14 +29,14 @@ public static class SendMessageFunction
         
         // Leer y validar el cuerpo de la solicitud JSON.
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-        var inputModel = JsonConvert.DeserializeObject<QueueMessage>(requestBody);
-        ValidationWrapper<QueueMessage> httpResponseBody = await req.GetBodyAsync<QueueMessage>();
-
-        if (!httpResponseBody.IsValid)
-        {
-            return new BadRequestObjectResult($"Invalid input: {string.Join(", ", httpResponseBody.ValidationResults.Select(s => s.ErrorMessage).ToArray())}");
-        }
-        
+        // var inputModel = JsonConvert.DeserializeObject<QueueMessage>(requestBody);
+        // ValidationWrapper<QueueMessage> httpResponseBody = await req.GetBodyAsync<QueueMessage>();
+        //
+        // if (!httpResponseBody.IsValid)
+        // {
+        //     return new BadRequestObjectResult($"Invalid input: {string.Join(", ", httpResponseBody.ValidationResults.Select(s => s.ErrorMessage).ToArray())}");
+        // }
+        //
         string connectionString = Environment.GetEnvironmentVariable("AzureServiceBusConnectionString");
         string queueName = "success_order_queue"; 
         await using var client = new ServiceBusClient(connectionString);
