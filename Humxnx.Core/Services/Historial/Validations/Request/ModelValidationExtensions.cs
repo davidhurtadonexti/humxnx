@@ -27,9 +27,9 @@ public static class ModelValidationExtension
         var bodyString = await request.ReadAsStringAsync();
         return BuildValidationWrapper<T>(bodyString);
     }
-    public static async Task<ValidationWrapper<T>> GetQueryParamAsync<T>(this HttpRequest request)
+    public static Task<ValidationWrapper<T>> GetQueryParamAsync<T>(this HttpRequest request)
     {
         string res = JsonConvert.SerializeObject(request.GetQueryParameterDictionary());
-        return BuildValidationWrapper<T>(res);
+        return Task.FromResult(BuildValidationWrapper<T>(res));
     }
 }

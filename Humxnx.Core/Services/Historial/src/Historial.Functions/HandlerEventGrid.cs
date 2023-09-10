@@ -1,74 +1,89 @@
-
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
+using Humxnx.Historial.Core.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System.Text.Json;
 
-namespace Humxnx.Historial.Core.Functions;
-
-public static class HandlerEventGrid
+public static class ReactiveApiFunction
 {
-    private static readonly Subject<string> messageSubject = new Subject<string>();
-    private static readonly List<TextWriter> clients = new();
+    // Utilizaremos un BehaviorSubject para mantener un flujo de eventos simulados
+    private static readonly BehaviorSubject<string> eventStream = new BehaviorSubject<string>("Stream creado exitosamente");
+    private static readonly Dictionary<string, Subject<string>> sessionEventStreams = new Dictionary<string, Subject<string>>();
 
-    [FunctionName("Consumer")]
+
+    [FunctionName("ReactiveApi")]
     public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable")]
-        HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable/{sessionId}")] HttpRequest req,
+        string sessionId,
         ILogger log)
     {
-        log.LogInformation("Esperando mensajes desde un evento en eventGrid para responder a la solicitud HTTP desde un Observador.");
+        log.LogInformation("C# HTTP trigger function processed a request.");
 
+        // Verifica si ya existe un flujo de eventos para esta sesión
+        var checkSession = sessionEventStreams.TryGetValue(sessionId, out var ChekckEventObserver);
+        if (!checkSession)
+        {
+            log.LogInformation("check session: " + sessionId);
+            // Si no existe, crea uno nuevo para esta sesión
+            var newEventStream = new Subject<string>();
+            ChekckEventObserver = newEventStream;
+
+            // Agrega el nuevo flujo de eventos al diccionario
+            sessionEventStreams.Add(sessionId, ChekckEventObserver);
+
+            // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
+            req.HttpContext.Response.OnCompleted(() =>
+            {
+                sessionEventStreams.Remove(sessionId);
+                return Task.CompletedTask;
+            });
+        }
+        
+        // Establece la respuesta HTTP como un flujo de eventos (Content-Type: text/event-stream)
         var response = req.HttpContext.Response;
         response.Headers.Add("Content-Type", "text/event-stream");
-        response.Headers.Add("Cache-Control", "no-cache");
-        response.Headers.Add("Connection", "keep-alive");
-
-        var client = new StreamWriter(response.Body);
-        clients.Add(client);
 
         try
         {
-            // Conexión para enviar eventos SSE a los clientes cuando lleguen eventos de Event Grid.
-            while (!req.HttpContext.RequestAborted.IsCancellationRequested)
+            if (sessionEventStreams.TryGetValue(sessionId, out var eventObserver))
             {
-                // Obtiene el  mensaje del flujo reactivo
-                string latestMessage = messageSubject.FirstOrDefault();
-
-                if (latestMessage != null)
+                // Suscríbete al flujo de eventos y envía eventos al cliente
+                await eventObserver.ForEachAsync(async eventData =>
                 {
-                    log.LogInformation("Se levanta el Observador para enviar al front");
-                    var eventData = new { data = latestMessage };
-                    var eventDataJsons = JsonConvert.SerializeObject(eventData);
-                    await client.WriteAsync($"data: {eventDataJsons}\n\n");
-                }
-                
-                await client.FlushAsync();
+                    // Envía eventos al cliente en un formato adecuado para EventSource
+
+                    if (eventData != null)
+                    {
+                        log.LogInformation("Se levanta el Observador para enviar al front");
+                        var messageData = new { data = eventData };
+                        var eventDataJsons = JsonSerializer.Serialize(messageData);
+                        await response.WriteAsync($"data: {eventDataJsons}\n\n");
+                        await response.Body.FlushAsync();
+                    }
+
+
+                });
+
             }
+
+            return new OkResult();
         }
         catch (Exception ex)
         {
-            log.LogError($"Error en la transmisión de SSE: {ex.Message}");
+            log.LogError($"Error en la transmisión de eventos: {ex.Message}");
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
         }
-        finally
-        {
-            clients.Remove(client);
-            client.Dispose();
-        }
-
-        return new OkResult();
     }
-    
     
     [FunctionName("ReceiveMessage")]
     public static void Receive(
@@ -78,9 +93,14 @@ public static class HandlerEventGrid
     {
         try
         {
-
+            QueueMessage messageReceived = JsonSerializer.Deserialize<QueueMessage>(message);
             logger.LogInformation($"Se captura el mensaje del EventGrid por medio del Service bus: {message}");
-            messageSubject.OnNext(message);
+         
+            if (sessionEventStreams.TryGetValue(messageReceived.SessionId, out var eventObserver))
+            {
+                logger.LogInformation("response SessionId: " + messageReceived.SessionId);
+                 eventObserver.OnNext(message);
+            }
         }
         catch (Exception ex)
         {
