@@ -1,59 +1,90 @@
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Net;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
-using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Humxnx.Historial.Core.Functions;
 
 public static class HandlerEventGrid
 {
-    
+    private static readonly Subject<string> messageSubject = new Subject<string>();
+    private static readonly List<TextWriter> clients = new();
+
     [FunctionName("Consumer")]
     public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "consumer")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable")]
+        HttpRequest req,
         ILogger log)
     {
+        log.LogInformation("Esperando mensajes desde un evento en eventGrid para responder a la solicitud HTTP desde un Observador.");
+
+        var response = req.HttpContext.Response;
+        response.Headers.Add("Content-Type", "text/event-stream");
+        response.Headers.Add("Cache-Control", "no-cache");
+        response.Headers.Add("Connection", "keep-alive");
+
+        var client = new StreamWriter(response.Body);
+        clients.Add(client);
+
         try
         {
-            
-            string connectionString = Environment.GetEnvironmentVariable("AzureServiceBusConnectionString");
-            string queueName = "success_order_queue"; 
-            string requestQueueBody = await new StreamReader(req.Body).ReadToEndAsync();
-            await using var client = new ServiceBusClient(connectionString);
-
-            var receiver = client.CreateReceiver(queueName);
-
-            //var message = new ServiceBusMessage(requestQueueBody);
-            receiver.ReceiveMessageAsync();
-
-            //tring requestBody = result.Body.ToString();
-            // Leer el cuerpo JSON del evento de Event Grid
-            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-
-            // Procesa el evento de Event Grid y conviértelo en un evento SSE
-            string sseEvent = $"data: {req.Body}\n\n";
-
-            // Configura la respuesta SSE
-            return new ContentResult
+            // Conexión para enviar eventos SSE a los clientes cuando lleguen eventos de Event Grid.
+            while (!req.HttpContext.RequestAborted.IsCancellationRequested)
             {
-                Content = sseEvent,
-                ContentType = "text/event-stream",
-                StatusCode = (int)HttpStatusCode.OK
-            };
+                // Obtiene el  mensaje del flujo reactivo
+                string latestMessage = messageSubject.FirstOrDefault();
+
+                if (latestMessage != null)
+                {
+                    log.LogInformation("Enviando al Observador el mensaje leído");
+                    var eventData = new { data = latestMessage };
+                    var eventDataJsons = JsonConvert.SerializeObject(eventData);
+                    await client.WriteAsync($"data: {eventDataJsons}\n\n");
+                }
+                
+                await client.FlushAsync();
+            }
         }
         catch (Exception ex)
         {
-            log.LogError(ex, "Error procesando el evento de Event Grid");
-            return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
+            log.LogError($"Error en la transmisión de SSE: {ex.Message}");
+        }
+        finally
+        {
+            clients.Remove(client);
+            client.Dispose();
+        }
+
+        return new OkResult();
+    }
+    
+    
+    [FunctionName("ReceiveMessage")]
+    public static void Receive(
+        [EventGrid(TopicEndpointUri = "EventGridAttribute.TopicEndpointUri", TopicKeySetting = "EventGridAttribute.TopicKeySetting")] IAsyncCollector<EventGridEvent> eventCollector,
+        [ServiceBusTrigger("success_order_queue", Connection = "AzureServiceBusConnectionString")] string message,
+        ILogger logger)
+    {
+        try
+        {
+
+            logger.LogInformation($"Mensaje recibido: {message}");
+            messageSubject.OnNext(message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al recibir mensajes: {ex.Message}");
         }
     }
 }
