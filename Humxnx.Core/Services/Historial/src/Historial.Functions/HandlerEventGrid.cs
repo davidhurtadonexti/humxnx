@@ -35,23 +35,25 @@ public static class ReactiveApiFunction
         var checkSession = sessionEventStreams.TryGetValue(sessionId, out var ChekckEventObserver);
         if (!checkSession)
         {
-            log.LogInformation("check session: " + sessionId);
+          
             // Si no existe, crea uno nuevo para esta sesión
             var newEventStream = new Subject<string>();
             ChekckEventObserver = newEventStream;
 
             // Agrega el nuevo flujo de eventos al diccionario
             sessionEventStreams.Add(sessionId, ChekckEventObserver);
-            
+            log.LogInformation("Init session: " + sessionId);
             var messageData = new { data = "Stream creado exitosamente con SessionID: "+ sessionId};
             await response.WriteAsync($"data: {messageData}\n\n");
             await response.Body.FlushAsync();
+            log.LogInformation("Async response sessionId: " + sessionId);
             // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
             response.OnCompleted(() =>
             {
                 sessionEventStreams.Remove(sessionId);
                 return Task.CompletedTask;
             });
+            log.LogInformation("Correctt flow SessionId: " + sessionId);
             // return new OkResult();
         }
         
@@ -62,22 +64,21 @@ public static class ReactiveApiFunction
             if (sessionEventStreams.TryGetValue(sessionId, out var eventObserver))
             {
                 // Suscríbete al flujo de eventos y envía eventos al cliente
-                await eventObserver.ForEachAsync(async eventData =>
+                async void OnNext(string eventData)
                 {
                     // Envía eventos al cliente en un formato adecuado para EventSource
 
                     if (eventData != null)
                     {
-                        log.LogInformation("Se levanta el Observador para enviar al front");
+                        log.LogInformation("Se levanta el Observador para la SessionID: " + sessionId);
                         var messageData = new { data = eventData };
                         var eventDataJsons = JsonSerializer.Serialize(messageData);
                         await response.WriteAsync($"data: {eventDataJsons}\n\n");
                         await response.Body.FlushAsync();
                     }
+                }
 
-
-                });
-
+                await eventObserver.ForEachAsync(OnNext);
             }
 
             return new OkResult();
