@@ -47,7 +47,7 @@ public static class HandlerEventGrid
 
                 if (latestMessage != null)
                 {
-                    log.LogInformation("Enviando al Observador el mensaje leído");
+                    log.LogInformation("Se levanta el Observador para enviar al front");
                     var eventData = new { data = latestMessage };
                     var eventDataJsons = JsonConvert.SerializeObject(eventData);
                     await client.WriteAsync($"data: {eventDataJsons}\n\n");
@@ -79,7 +79,7 @@ public static class HandlerEventGrid
         try
         {
 
-            logger.LogInformation($"Mensaje recibido: {message}");
+            logger.LogInformation($"Se captura el mensaje del EventGrid por medio del Service bus: {message}");
             messageSubject.OnNext(message);
         }
         catch (Exception ex)

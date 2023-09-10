@@ -47,7 +47,7 @@ public static class SendMessageFunction
         {
             var message = new ServiceBusMessage(requestBody);
             await sender.SendMessageAsync(message);
-            logger.LogInformation( "Mensaje enviado con éxito.");
+            logger.LogInformation( "Envia mensaje al Service Bus");
             return new OkObjectResult($"Mensaje enviado");
         }
         catch (Exception ex)
