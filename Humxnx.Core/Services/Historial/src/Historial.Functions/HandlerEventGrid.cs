@@ -17,18 +17,20 @@ using System.Text.Json;
 public static class ReactiveApiFunction
 {
     // Utilizaremos un BehaviorSubject para mantener un flujo de eventos simulados
-    private static readonly BehaviorSubject<string> eventStream = new BehaviorSubject<string>("Stream creado exitosamente");
     private static readonly Dictionary<string, Subject<string>> sessionEventStreams = new Dictionary<string, Subject<string>>();
 
 
-    [FunctionName("ReactiveApi")]
+    [FunctionName("ObservableEventGrid")]
     public static async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable/{sessionId}")] HttpRequest req,
         string sessionId,
         ILogger log)
     {
         log.LogInformation("C# HTTP trigger function processed a request.");
-
+        // Establece la respuesta HTTP como un flujo de eventos (Content-Type: text/event-stream)
+        var response = req.HttpContext.Response;
+        response.Headers.Add("Content-Type", "text/event-stream");
+        
         // Verifica si ya existe un flujo de eventos para esta sesión
         var checkSession = sessionEventStreams.TryGetValue(sessionId, out var ChekckEventObserver);
         if (!checkSession)
@@ -40,18 +42,20 @@ public static class ReactiveApiFunction
 
             // Agrega el nuevo flujo de eventos al diccionario
             sessionEventStreams.Add(sessionId, ChekckEventObserver);
-
+            
+            var messageData = new { data = "Stream creado exitosamente con SessionID: "+ sessionId};
+            await response.WriteAsync($"data: {messageData}\n\n");
+            await response.Body.FlushAsync();
             // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
-            req.HttpContext.Response.OnCompleted(() =>
+            response.OnCompleted(() =>
             {
                 sessionEventStreams.Remove(sessionId);
                 return Task.CompletedTask;
             });
+            // return new OkResult();
         }
         
-        // Establece la respuesta HTTP como un flujo de eventos (Content-Type: text/event-stream)
-        var response = req.HttpContext.Response;
-        response.Headers.Add("Content-Type", "text/event-stream");
+    
 
         try
         {
@@ -85,7 +89,7 @@ public static class ReactiveApiFunction
         }
     }
     
-    [FunctionName("ReceiveMessage")]
+    [FunctionName("ReceiveEventGridMessage")]
     public static void Receive(
         [EventGrid(TopicEndpointUri = "EventGridAttribute.TopicEndpointUri", TopicKeySetting = "EventGridAttribute.TopicKeySetting")] IAsyncCollector<EventGridEvent> eventCollector,
         [ServiceBusTrigger("success_order_queue", Connection = "AzureServiceBusConnectionString")] string message,
