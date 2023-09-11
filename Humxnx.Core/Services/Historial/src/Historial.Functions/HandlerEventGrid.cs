@@ -34,8 +34,9 @@ public static class ReactiveApiFunction
         // Establece la respuesta HTTP como un flujo de eventos (Content-Type: text/event-stream)
         var response = req.HttpContext.Response;
         response.Headers.Add("Content-Type", "text/event-stream");
-        // response.Headers.Add("Cache-Control", "no-cache");
+        response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
+        response.Headers.Add("Transfer-Encoding", "chunked");
         string sessionStateId = sessionId;
         var client = new StreamWriter(response.Body);
         clients.Add(client);
@@ -88,24 +89,22 @@ public static class ReactiveApiFunction
 
                 log.LogInformation("dentro de SessionEventStreams");
                 // Suscríbete al flujo de eventos y envía eventos al cliente
-                // await eventObserver.ForEachAsync(async (eventData) =>
-                while (!req.HttpContext.RequestAborted.IsCancellationRequested)
+                await chekckEventObserver.ForEachAsync(async (eventData) =>
+                    // while (!req.HttpContext.RequestAborted.IsCancellationRequested)
                 {
                     try
                     {
                         log.LogInformation("fuera de eventData arriba");
-                        string latestMessage = chekckEventObserver.FirstOrDefault();
-                        if (latestMessage != null)
-                        {
-                            log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
-                            var messageData = new { data = latestMessage };
-                            var eventDataJsons = JsonSerializer.Serialize(messageData);
-                            await client.WriteAsync($"data: {eventDataJsons}\n\n");
-                            await client.FlushAsync();
-                            log.LogInformation("Escribiendo mensaje para la SessionId: " + sessionStateId);
-                        }
-
-                        log.LogInformation("fuera de eventData abajo");
+                            if (eventData != null)
+                            {
+                                log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
+                                var messageData = new { data = eventData };
+                                var eventDataJsons = JsonSerializer.Serialize(messageData);
+                                await client.WriteAsync($"data: {eventDataJsons}\n\n");
+                                await client.FlushAsync();
+                                log.LogInformation("Escribiendo mensaje para la SessionId: " + sessionStateId);
+                            }
+                            log.LogInformation("fuera de eventData abajo");
                     }
                     catch (Exception ex)
                     {
@@ -113,8 +112,8 @@ public static class ReactiveApiFunction
                             $"Error en la transmisión de eventos para la sesión {sessionStateId}: {ex.Message}");
                         // Puedes manejar la excepción de acuerdo a tus necesidades, como cerrar la conexión o tomar otra acción.
                     }
-                }
-            
+                });
+
 
         }
         catch (Exception ex)
