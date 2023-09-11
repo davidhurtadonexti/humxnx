@@ -79,8 +79,6 @@ public static class ReactiveApiFunction
         response.OnCompleted(() =>
         {
             log.LogInformation("dentro de response.OnCompleted");
-            clients.Remove(client);
-            client.Dispose();
             SessionEventStreams.Remove(sessionStateId);
             return Task.CompletedTask;
         });
@@ -94,15 +92,17 @@ public static class ReactiveApiFunction
             {
                 log.LogInformation("dentro de SessionEventStreams");
                 // Suscríbete al flujo de eventos y envía eventos al cliente
-                await eventObserver.ForEachAsync(async (eventData) =>
+                // await eventObserver.ForEachAsync(async (eventData) =>
+                while (!req.HttpContext.RequestAborted.IsCancellationRequested)
                 {
                     try
                     {
                         log.LogInformation("fuera de eventData arriba");
-                        if (eventData != null)
+                        string latestMessage = eventObserver.FirstOrDefault();
+                        if (latestMessage != null)
                         {
                             log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
-                            var messageData = new { data = eventData };
+                            var messageData = new { data = latestMessage };
                             var eventDataJsons = JsonSerializer.Serialize(messageData);
                             await client.WriteAsync($"data: {eventDataJsons}\n\n");
                             await client.FlushAsync();
@@ -115,7 +115,7 @@ public static class ReactiveApiFunction
                         log.LogError($"Error en la transmisión de eventos para la sesión {sessionStateId}: {ex.Message}");
                         // Puedes manejar la excepción de acuerdo a tus necesidades, como cerrar la conexión o tomar otra acción.
                     }
-                });
+                };
                 
             }
             
