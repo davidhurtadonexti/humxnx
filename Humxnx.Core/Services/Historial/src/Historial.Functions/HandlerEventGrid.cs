@@ -27,16 +27,16 @@ public static class ReactiveApiFunction
     [FunctionName("ObservableEventGrid")]
     public static async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable/{sessionId}")] HttpRequest req,
-        string sessionStateId,
+        string sessionId,
         ILogger log)
     {
         log.LogInformation("C# HTTP trigger function processed a request.");
         // Establece la respuesta HTTP como un flujo de eventos (Content-Type: text/event-stream)
         var response = req.HttpContext.Response;
         response.Headers.Add("Content-Type", "text/event-stream");
-        response.Headers.Add("Cache-Control", "no-cache");
+        // response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
-        
+        string sessionStateId = sessionId;
         var client = new StreamWriter(response.Body);
         clients.Add(client);
         // Obtener el estado de la sesión desde Azure Blob Storage
