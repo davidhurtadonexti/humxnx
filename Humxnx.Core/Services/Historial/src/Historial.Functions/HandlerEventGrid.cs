@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -18,14 +17,12 @@ using System.Text.Json;
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 public static class ReactiveApiFunction
 {
     // Utilizaremos un BehaviorSubject para mantener un flujo de eventos simulados
     private static readonly Dictionary<string, Subject<string>> SessionEventStreams = new Dictionary<string, Subject<string>>();
-
+    private static readonly List<TextWriter> clients = new();
 
     [FunctionName("ObservableEventGrid")]
     public static async Task<IActionResult> Run(
@@ -76,15 +73,34 @@ public static class ReactiveApiFunction
             log.LogInformation("Successfully SessionId: " + sessionStateId);
         }
         
-    
+        var client = new StreamWriter(response.Body);
+        clients.Add(client);
 
         try
         {
-            log.LogInformation($"data: {sessionStateId}\n\n");
+            log.LogInformation($"data: {sessionStateId}");
             if (SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver))
             {
                 // Suscríbete al flujo de eventos y envía eventos al cliente
-                async void OnNext(string eventData)
+                while (!req.HttpContext.RequestAborted.IsCancellationRequested)
+                {
+                    var eventData = await eventObserver.Take(1).FirstOrDefaultAsync();
+            
+                    if (eventData != null)
+                    {
+                        // Envía el evento al cliente en el formato adecuado para EventSource
+                        log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
+                        var messageData = new { data = eventData };
+                        var eventDataJsons = JsonSerializer.Serialize(messageData);
+                        await client.WriteAsync($"data: {eventDataJsons}");
+                        await client.FlushAsync();
+                        client.Close();
+                
+                        // Rompe el bucle después de enviar el primer mensaje
+                        break;
+                    }
+                }
+              /*  await eventObserver.ForEachAsync(async eventData =>
                 {
                     // Envía eventos al cliente en un formato adecuado para EventSource
 
@@ -93,13 +109,12 @@ public static class ReactiveApiFunction
                         log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
                         var messageData = new { data = eventData };
                         var eventDataJsons = JsonSerializer.Serialize(messageData);
-                        await response.WriteAsync($"data: {eventDataJsons}\n\n");
-                        await response.Body.FlushAsync();
+                        await client.WriteAsync($"data: {eventDataJsons}\n\n");
+                        await client.FlushAsync();
                         log.LogInformation("Escribiendo mensaje para la SessionId; : " + sessionStateId);
                     }
-                }
-
-                await eventObserver.ForEachAsync(OnNext);
+                });*/
+                
             }
 
             return new OkResult();
@@ -108,6 +123,12 @@ public static class ReactiveApiFunction
         {
             log.LogError($"Error en la transmisión de eventos: {ex.Message}");
             return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        }
+        finally
+        {
+            clients.Remove(client);
+            await client.DisposeAsync();
+ 
         }
     }
     
