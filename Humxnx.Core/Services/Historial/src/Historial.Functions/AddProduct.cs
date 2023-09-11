@@ -1,5 +1,6 @@
 
 using System.IO;
+using Humxnx.Historial.Core.Infrastructure.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -23,8 +24,10 @@ namespace Humxnx.Historial.Core.Functions
             {
                 return new BadRequestObjectResult("Not a valid request");
             }
-
-            return new OkResult();
+            var products = new ProductoController();
+            // var products = Product.GetAllProducts();
+            
+            return new OkObjectResult(products.Post(null));
         }
     }
 }

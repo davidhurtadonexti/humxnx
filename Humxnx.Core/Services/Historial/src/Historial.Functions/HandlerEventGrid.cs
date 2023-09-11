@@ -38,24 +38,27 @@ public static class HandlerEventGrid
         try
         {
             
-            log.LogInformation("Recibiendo evento de Event Grid...");
+            log.LogInformation("Escuchando el observable");
             var messageData = new { data = "Stream creado exitosamente"};
             await client.WriteAsync($"data: {messageData}\n\n");
             await client.FlushAsync();
             while (!req.HttpContext.RequestAborted.IsCancellationRequested)
             {
+                log.LogInformation("Esperando un mensaje para emitirlo");
                 // Obtiene el último mensaje del flujo reactivo
                 string latestMessage = messageSubject.FirstOrDefault();
-
                 if (latestMessage != null)
                 {
                     var eventDataJson = JsonConvert.SerializeObject(latestMessage);
                     await client.WriteAsync($"data: {eventDataJson}\n\n");
+                    await client.FlushAsync();
+                    log.LogInformation("Se envió la respuesta al observador");
                 }
-                await client.FlushAsync();
+                
+                log.LogInformation("Fuera del la condicion de escritura de mensaje");
             }
             
-            
+            log.LogInformation("Respuesta SSE");
             // Configura la respuesta SSE
             return new ContentResult
             {
@@ -70,7 +73,8 @@ public static class HandlerEventGrid
             return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
         }
         finally
-        {
+        { 
+            log.LogInformation("Se eliminan los clientes");
             clients.Remove(client);
             client.Dispose();
         }
