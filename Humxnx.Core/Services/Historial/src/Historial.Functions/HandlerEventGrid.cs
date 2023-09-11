@@ -37,7 +37,8 @@ public static class ReactiveApiFunction
         response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
         
-   
+        var client = new StreamWriter(response.Body);
+        clients.Add(client);
         // Obtener el estado de la sesión desde Azure Blob Storage
         var sessionStateId = await GetSessionStateFromStorage(sessionId, log);
         // Verifica si ya existe un flujo de eventos para esta sesión
@@ -62,30 +63,39 @@ public static class ReactiveApiFunction
 
             log.LogInformation("Init session: " + sessionStateId);
             var messageData = new { data = "Stream creado exitosamente con SessionID: "+ sessionStateId};
-            await response.WriteAsync($"data: {messageData}\n\n");
-            await response.Body.FlushAsync();
-            // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
-            response.OnCompleted(() =>
-            {
-                SessionEventStreams.Remove(sessionStateId);
-                return Task.CompletedTask;
-            });
+            await client.WriteAsync($"data: {messageData}\n\n");
+            await client.FlushAsync();
+            
             log.LogInformation("Successfully SessionId: " + sessionStateId);
         }
-        
-        var client = new StreamWriter(response.Body);
-        clients.Add(client);
+        else
+        {  
+            var messageData = new { data = "Sesion existente con SessionID: "+ sessionStateId};
+            await client.WriteAsync($"data: {messageData}\n\n");
+            await client.FlushAsync();
+        }
+        // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
+        response.OnCompleted(() =>
+        {
+            log.LogInformation("dentro de response.OnCompleted");
+            
+            SessionEventStreams.Remove(sessionStateId);
+            return Task.CompletedTask;
+        });
 
         try
         {
             log.LogInformation($"data: {sessionStateId}");
             if (SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver))
             {
+                log.LogInformation("dentro de SessionEventStreams");
                 // Suscríbete al flujo de eventos y envía eventos al cliente
                 await eventObserver.ForEachAsync(async eventData =>
                 {
+                // string latestMessage = eventObserver.FirstOrDefault();
+                
                     // Envía eventos al cliente en un formato adecuado para EventSource
-
+                    log.LogInformation("fuera de eventData arriba");
                     if (eventData != null)
                     {
                         log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
@@ -95,11 +105,11 @@ public static class ReactiveApiFunction
                         await client.FlushAsync();
                         log.LogInformation("Escribiendo mensaje para la SessionId; : " + sessionStateId);
                     }
+                    log.LogInformation("fuera de eventData abajo");
                 });
                 
             }
-
-            return new OkResult();
+            
         }
         catch (Exception ex)
         {
@@ -108,10 +118,13 @@ public static class ReactiveApiFunction
         }
         finally
         {
+            
+          
             clients.Remove(client);
             await client.DisposeAsync();
  
         }
+        return new OkResult();
     }
     
     [FunctionName("ReceiveEventGridMessage")]
