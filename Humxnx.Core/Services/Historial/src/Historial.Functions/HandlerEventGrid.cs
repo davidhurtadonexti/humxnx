@@ -43,9 +43,13 @@ public static class ReactiveApiFunction
         //var sessionStateId = await GetSessionStateFromStorage(sessionId, log);
         // Verifica si ya existe un flujo de eventos para esta sesión
         var checkSession = SessionEventStreams.TryGetValue(sessionStateId, out var chekckEventObserver);
-        if (!checkSession)
-        {
-          
+        if(checkSession)
+        {  
+            log.LogInformation("Sesion existente con SessionID " + sessionStateId);
+            var messageData = new { data = "Sesion existente con SessionID: "+ sessionStateId};
+            await client.WriteAsync($"data: {messageData}\n\n");
+            await client.FlushAsync();
+        }else{
             // Si no existe, crea uno nuevo para esta sesión
             var newEventStream = new Subject<string>();
             chekckEventObserver = newEventStream;
@@ -68,28 +72,20 @@ public static class ReactiveApiFunction
             
             log.LogInformation("Successfully SessionId: " + sessionStateId);
         }
-        else
-        {  
-            log.LogInformation("Sesion existente con SessionID " + sessionStateId);
-            var messageData = new { data = "Sesion existente con SessionID: "+ sessionStateId};
-            await client.WriteAsync($"data: {messageData}\n\n");
-            await client.FlushAsync();
-        }
         // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
-        response.OnCompleted(() =>
-        {
-            log.LogInformation("dentro de response.OnCompleted");
-            SessionEventStreams.Remove(sessionStateId);
-            return Task.CompletedTask;
-        });
+        // response.OnCompleted(() =>
+        // {
+        //     log.LogInformation("dentro de response.OnCompleted sessionStateId:"+ sessionStateId);
+        //     SessionEventStreams.Remove(sessionStateId);
+        //     return Task.CompletedTask;
+        // });
 
         try
         {
             log.LogInformation($"data: {sessionStateId}", checkSession);
             // if (checkSession)
-            var checkSessionCreated = SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver);
-            if (checkSessionCreated)
-            {
+            //var checkSessionCreated = SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver);
+
                 log.LogInformation("dentro de SessionEventStreams");
                 // Suscríbete al flujo de eventos y envía eventos al cliente
                 // await eventObserver.ForEachAsync(async (eventData) =>
@@ -98,7 +94,7 @@ public static class ReactiveApiFunction
                     try
                     {
                         log.LogInformation("fuera de eventData arriba");
-                        string latestMessage = eventObserver.FirstOrDefault();
+                        string latestMessage = chekckEventObserver.FirstOrDefault();
                         if (latestMessage != null)
                         {
                             log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
@@ -108,17 +104,18 @@ public static class ReactiveApiFunction
                             await client.FlushAsync();
                             log.LogInformation("Escribiendo mensaje para la SessionId: " + sessionStateId);
                         }
+
                         log.LogInformation("fuera de eventData abajo");
                     }
                     catch (Exception ex)
                     {
-                        log.LogError($"Error en la transmisión de eventos para la sesión {sessionStateId}: {ex.Message}");
+                        log.LogError(
+                            $"Error en la transmisión de eventos para la sesión {sessionStateId}: {ex.Message}");
                         // Puedes manejar la excepción de acuerdo a tus necesidades, como cerrar la conexión o tomar otra acción.
                     }
-                };
-                
-            }
+                }
             
+
         }
         catch (Exception ex)
         {
@@ -128,7 +125,6 @@ public static class ReactiveApiFunction
         finally
         {
             
-            // chekckEventObserver.OnCompleted();
             clients.Remove(client);
             await client.DisposeAsync();
  
