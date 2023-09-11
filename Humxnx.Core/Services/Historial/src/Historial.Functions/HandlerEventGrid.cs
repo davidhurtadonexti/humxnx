@@ -37,11 +37,20 @@ public static class HandlerEventGrid
         clients.Add(client);
         try
         {
-            
             log.LogInformation("Escuchando el observable");
             var messageData = new { data = "Stream creado exitosamente"};
             await client.WriteAsync($"data: {messageData}\n\n");
             await client.FlushAsync();
+            await client.WriteAsync($"data: {messageData}\n\n");
+            await client.FlushAsync();
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Error  al iniciar el observable");
+            return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
+        }
+        try
+        {
             while (!req.HttpContext.RequestAborted.IsCancellationRequested)
             {
                 log.LogInformation("Esperando un mensaje para emitirlo");
