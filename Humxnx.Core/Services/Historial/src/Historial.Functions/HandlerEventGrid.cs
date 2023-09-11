@@ -27,7 +27,7 @@ public static class ReactiveApiFunction
     [FunctionName("ObservableEventGrid")]
     public static async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable/{sessionId}")] HttpRequest req,
-        string sessionId,
+        string sessionStateId,
         ILogger log)
     {
         log.LogInformation("C# HTTP trigger function processed a request.");
@@ -40,7 +40,7 @@ public static class ReactiveApiFunction
         var client = new StreamWriter(response.Body);
         clients.Add(client);
         // Obtener el estado de la sesión desde Azure Blob Storage
-        var sessionStateId = await GetSessionStateFromStorage(sessionId, log);
+        //var sessionStateId = await GetSessionStateFromStorage(sessionId, log);
         // Verifica si ya existe un flujo de eventos para esta sesión
         var checkSession = SessionEventStreams.TryGetValue(sessionStateId, out var chekckEventObserver);
         if (!checkSession)
@@ -59,7 +59,7 @@ public static class ReactiveApiFunction
             // El estado de sesión inicial
 
             // Guarda el estado de sesión en Azure Blob Storage
-            await SaveSessionStateToStorage(sessionStateId, sessionStateId, log);
+            //await SaveSessionStateToStorage(sessionStateId, sessionStateId, log);
 
             log.LogInformation("Init session: " + sessionStateId);
             var messageData = new { data = "Stream creado exitosamente con SessionID: "+ sessionStateId};
@@ -79,6 +79,8 @@ public static class ReactiveApiFunction
         response.OnCompleted(() =>
         {
             log.LogInformation("dentro de response.OnCompleted");
+            clients.Remove(client);
+            client.Dispose();
             SessionEventStreams.Remove(sessionStateId);
             return Task.CompletedTask;
         });
@@ -115,7 +117,7 @@ public static class ReactiveApiFunction
                     }
                 });
                 
-             }
+            }
             
         }
         catch (Exception ex)
