@@ -82,25 +82,7 @@ public static class ReactiveApiFunction
             if (SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver))
             {
                 // Suscríbete al flujo de eventos y envía eventos al cliente
-                while (!req.HttpContext.RequestAborted.IsCancellationRequested)
-                {
-                    var eventData = await eventObserver.Take(1).FirstOrDefaultAsync();
-            
-                    if (eventData != null)
-                    {
-                        // Envía el evento al cliente en el formato adecuado para EventSource
-                        log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
-                        var messageData = new { data = eventData };
-                        var eventDataJsons = JsonSerializer.Serialize(messageData);
-                        await client.WriteAsync($"data: {eventDataJsons}");
-                        await client.FlushAsync();
-                        client.Close();
-                
-                        // Rompe el bucle después de enviar el primer mensaje
-                        break;
-                    }
-                }
-              /*  await eventObserver.ForEachAsync(async eventData =>
+                await eventObserver.ForEachAsync(async eventData =>
                 {
                     // Envía eventos al cliente en un formato adecuado para EventSource
 
@@ -113,7 +95,7 @@ public static class ReactiveApiFunction
                         await client.FlushAsync();
                         log.LogInformation("Escribiendo mensaje para la SessionId; : " + sessionStateId);
                     }
-                });*/
+                });
                 
             }
 
