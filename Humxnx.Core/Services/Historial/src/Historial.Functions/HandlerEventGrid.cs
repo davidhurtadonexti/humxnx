@@ -36,7 +36,7 @@ public static class ReactiveApiFunction
         response.Headers.Add("Content-Type", "text/event-stream");
         response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
-        response.Headers.Add("Transfer-Encoding", "chunked");
+        // response.Headers.Add("Transfer-Encoding", "chunked");
         string sessionStateId = sessionId;
         var client = new StreamWriter(response.Body);
         clients.Add(client);
