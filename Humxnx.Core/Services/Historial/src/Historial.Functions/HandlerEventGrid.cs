@@ -55,6 +55,8 @@ public static class HandlerEventGrid
             await response.WriteAsync($"data: {dataJsons}\n\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
+            await response.WriteAsync("\r\n", Encoding.UTF8);
+            await response.Body.FlushAsync();
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
