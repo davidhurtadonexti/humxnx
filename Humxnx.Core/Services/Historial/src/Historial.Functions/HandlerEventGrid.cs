@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
 using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +21,7 @@ namespace Humxnx.Historial.Core.Functions;
 public static class HandlerEventGrid
 {
     private static readonly Subject<string> messageSubject = new Subject<string>();
-    private static readonly List<TextWriter> clients = new();
+    private static readonly List<StreamWriter> clients = new List<StreamWriter>();
     
     [FunctionName("Consumer")]
     public static async Task<IActionResult> Consumer(
@@ -37,56 +38,39 @@ public static class HandlerEventGrid
         clients.Add(client);
         try
         {
-            log.LogInformation("Escuchando el observable");
-            var messageData = new { data = "Stream creado exitosamente"};
-            await client.WriteAsync($"data: {messageData}\n\n");
+            var messageData = "Stream creado exitosamente";
+            var message = $"data: {messageData}\n\n";
+            await client.WriteAsync(message);
             await client.FlushAsync();
-            await client.WriteAsync($"data: {messageData}\n\n");
-            await client.FlushAsync();
-        }
-        catch (Exception ex)
-        {
-            log.LogError(ex, "Error  al iniciar el observable");
-            return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
-        }
-        try
-        {
+            await Task.Delay(2000);
             while (!req.HttpContext.RequestAborted.IsCancellationRequested)
             {
-                log.LogInformation("Esperando un mensaje para emitirlo");
+                
                 // Obtiene el último mensaje del flujo reactivo
                 string latestMessage = messageSubject.FirstOrDefault();
+
                 if (latestMessage != null)
                 {
                     var eventDataJson = JsonConvert.SerializeObject(latestMessage);
                     await client.WriteAsync($"data: {eventDataJson}\n\n");
                     await client.FlushAsync();
-                    log.LogInformation("Se envió la respuesta al observador");
+                    // await client.FlushAsync();
                 }
-                
-                log.LogInformation("Fuera del la condicion de escritura de mensaje");
+           
+                await Task.Delay(5000); // Espera 2 segundos antes de enviar el siguiente mensaje
             }
-            
-            log.LogInformation("Respuesta SSE");
-            // Configura la respuesta SSE
-            return new ContentResult
-            {
-                Content = "Esperando mensajes de la cola",
-                ContentType = "text/event-stream",
-                StatusCode = (int)HttpStatusCode.OK
-            };
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            log.LogError(ex, "Error procesando el evento de Event Grid");
-            return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
+            // Maneja las desconexiones del cliente u otros errores aquí
         }
         finally
-        { 
-            log.LogInformation("Se eliminan los clientes");
+        {
             clients.Remove(client);
             client.Dispose();
         }
+
+        return new EmptyResult();
     }
     
     [FunctionName("ReceiveMessage")]
