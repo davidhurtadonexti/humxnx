@@ -31,25 +31,28 @@ public static class HandlerEventGrid
         response.Headers.Add("Content-Type", "text/event-stream");
         response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
-
-        // Crea un Observable a partir del Subject
-        var sseObservable = messageSubject.AsObservable();
+        
         
         var messageData = new { data = "Stream creado exitosamente"};
         var eventDataJsons = JsonSerializer.Serialize(messageData);
         // Escribe los datos JSON seguidos de "\r\n"
         await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
         await response.Body.FlushAsync();
+        await response.WriteAsync("\r\n", Encoding.UTF8);
         await response.Body.FlushAsync();
         await response.Body.FlushAsync();
-
+        await response.Body.FlushAsync();
+        await response.Body.FlushAsync();
+        
+        // Crea un Observable a partir del Subject
+        var sseObservable = messageSubject.AsObservable();
         // Suscríbete al Observable y envía eventos SSE al cliente
         sseObservable.Subscribe(async sseEvent =>
         {
-            var messageData = new { data = sseEvent };
-            var eventDataJsons = JsonSerializer.Serialize(messageData);
+            var messageEventData = new { data = sseEvent };
+            var dataJsons = JsonSerializer.Serialize(messageEventData);
             // Envía el evento SSE al cliente de forma asincrónica
-            await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
+            await response.WriteAsync($"data: {dataJsons}\n\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
