@@ -1,13 +1,10 @@
-
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using Azure.Messaging.EventGrid;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -15,77 +12,68 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-
-namespace Humxnx.Historial.Core.Functions;
-
-public static class HandlerEventGrid
+public static class ReactiveFunctionWithSSE
 {
-    private static readonly Subject<string> messageSubject = new Subject<string>();
+    private static readonly ConcurrentQueue<string> eventQueue = new ConcurrentQueue<string>();
     private static readonly List<StreamWriter> clients = new List<StreamWriter>();
-    
-    [FunctionName("Consumer")]
-    public static async Task<IActionResult> Consumer(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable")] HttpRequest req,
+
+    [FunctionName("sendEvent")]
+    public static async Task<IActionResult> SendEvent(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "sendEvent")] HttpRequest req,
         ILogger log)
     {
+        log.LogInformation("Received an event.");
 
+        // Simular un evento y agregarlo a la cola de eventos
+        var evento = new { message = "Este es un evento" };
+        var eventJson = JsonConvert.SerializeObject(evento);
+        eventQueue.Enqueue(eventJson);
+
+        // Notificar a los clientes
+        NotifyClients(eventJson);
+
+        return new OkResult();
+    }
+
+    [FunctionName("streamEvents")]
+    public static async Task<IActionResult> StreamEvents(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "streamEvents")] HttpRequest req,
+        ILogger log)
+    {
+        log.LogInformation("Client connected for streaming events.");
+
+        // Establecer la respuesta HTTP como Server-Sent Events (SSE)
         var response = req.HttpContext.Response;
         response.Headers.Add("Content-Type", "text/event-stream");
         response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
 
-        var client = new StreamWriter(response.Body);
-        clients.Add(client);
-        try
-        {
-            var messageData = "Stream creado exitosamente";
-            var message = $"data: {messageData}\n\n";
-            await client.WriteAsync(message);
-            await client.FlushAsync();
-            await Task.Delay(2000);
-            while (!req.HttpContext.RequestAborted.IsCancellationRequested)
-            {
-                
-                // Obtiene el último mensaje del flujo reactivo
-                string latestMessage = messageSubject.FirstOrDefault();
+        // Crear un StreamWriter para escribir eventos en la respuesta
+        var clientStreamWriter = new StreamWriter(response.Body);
+        clients.Add(clientStreamWriter);
 
-                if (latestMessage != null)
-                {
-                    var eventDataJson = JsonConvert.SerializeObject(latestMessage);
-                    await client.WriteAsync($"data: {eventDataJson}\n\n");
-                    await client.FlushAsync();
-                    // await client.FlushAsync();
-                }
-           
-                await Task.Delay(5000); // Espera 2 segundos antes de enviar el siguiente mensaje
-            }
-        }
-        catch (Exception)
+        // Mantener la conexión abierta
+        while (!response.HttpContext.RequestAborted.IsCancellationRequested)
         {
-            // Maneja las desconexiones del cliente u otros errores aquí
-        }
-        finally
-        {
-            clients.Remove(client);
-            client.Dispose();
+            await response.Body.FlushAsync();
+            await Task.Delay(1000); // Intervalo de envío de eventos
         }
 
-        return new EmptyResult();
+        // Remover el StreamWriter cuando la conexión se cierra
+        clients.Remove(clientStreamWriter);
+
+        log.LogInformation("Client disconnected.");
+
+        return new StatusCodeResult((int)HttpStatusCode.OK);
     }
-    
-    [FunctionName("ReceiveMessage")]
-    public static void Receive(
-        [ServiceBusTrigger("success_order_queue", Connection = "AzureServiceBusConnectionString")] string message,
-        ILogger logger)
+
+    private static void NotifyClients(string eventJson)
     {
-        try
+        // Enviar el evento a todos los clientes conectados
+        foreach (var clientStreamWriter in clients)
         {
-            logger.LogInformation($"Mensaje recibido: {message}");
-            messageSubject.OnNext(message);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al recibir mensajes: {ex.Message}");
+            clientStreamWriter.WriteLine($"data: {eventJson}\n");
+            clientStreamWriter.Flush();
         }
     }
 }
