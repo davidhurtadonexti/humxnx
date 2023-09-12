@@ -34,6 +34,14 @@ public static class HandlerEventGrid
 
         // Crea un Observable a partir del Subject
         var sseObservable = messageSubject.AsObservable();
+        
+        var messageData = new { data = "Stream creado exitosamente"};
+        var eventDataJsons = JsonSerializer.Serialize(messageData);
+        // Escribe los datos JSON seguidos de "\r\n"
+        await response.WriteAsync($"{eventDataJsons}\r\n");
+        await response.WriteAsync($"{eventDataJsons}\n\n");
+        
+        await response.Body.FlushAsync();
 
         // Suscríbete al Observable y envía eventos SSE al cliente
         sseObservable.Subscribe(async sseEvent =>
@@ -41,6 +49,7 @@ public static class HandlerEventGrid
             var messageData = new { data = sseEvent };
             var eventDataJsons = JsonSerializer.Serialize(messageData);
             // Envía el evento SSE al cliente de forma asincrónica
+            await response.WriteAsync($"{eventDataJsons}\r\n");
             await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
             await response.Body.FlushAsync();
         });
