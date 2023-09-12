@@ -1,79 +1,69 @@
+
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Threading;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Reactive.Threading.Tasks;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
-public static class ReactiveFunctionWithSSE
+
+namespace Humxnx.Historial.Core.Functions;
+
+
+public static class HandlerEventGrid
 {
-    private static readonly ConcurrentQueue<string> eventQueue = new ConcurrentQueue<string>();
-    private static readonly List<StreamWriter> clients = new List<StreamWriter>();
-
-    [FunctionName("sendEvent")]
-    public static async Task<IActionResult> SendEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "sendEvent")] HttpRequest req,
+    private static readonly Subject<string> messageSubject = new Subject<string>();
+    
+    [FunctionName("Consumer")]
+    public static async Task<IActionResult>  Consumer(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable")] HttpRequest req,
         ILogger log)
     {
-        log.LogInformation("Received an event.");
-
-        // Simular un evento y agregarlo a la cola de eventos
-        var evento = new { message = "Este es un evento" };
-        var eventJson = JsonConvert.SerializeObject(evento);
-        eventQueue.Enqueue(eventJson);
-
-        // Notificar a los clientes
-        NotifyClients(eventJson);
-
-        return new OkResult();
-    }
-
-    [FunctionName("streamEvents")]
-    public static async Task<IActionResult> StreamEvents(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "streamEvents")] HttpRequest req,
-        ILogger log)
-    {
-        log.LogInformation("Client connected for streaming events.");
-
-        // Establecer la respuesta HTTP como Server-Sent Events (SSE)
+        
         var response = req.HttpContext.Response;
         response.Headers.Add("Content-Type", "text/event-stream");
         response.Headers.Add("Cache-Control", "no-cache");
         response.Headers.Add("Connection", "keep-alive");
 
-        // Crear un StreamWriter para escribir eventos en la respuesta
-        var clientStreamWriter = new StreamWriter(response.Body);
-        clients.Add(clientStreamWriter);
+        // Crea un Observable a partir del Subject
+        var sseObservable = messageSubject.AsObservable();
 
-        // Mantener la conexión abierta
-        while (!response.HttpContext.RequestAborted.IsCancellationRequested)
+        // Suscríbete al Observable y envía eventos SSE al cliente
+        sseObservable.Subscribe(async sseEvent =>
         {
+            var messageData = new { data = sseEvent };
+            var eventDataJsons = JsonSerializer.Serialize(messageData);
+            // Envía el evento SSE al cliente de forma asincrónica
+            await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
             await response.Body.FlushAsync();
-            await Task.Delay(1000); // Intervalo de envío de eventos
-        }
+        });
 
-        // Remover el StreamWriter cuando la conexión se cierra
-        clients.Remove(clientStreamWriter);
+        // Espera a que la suscripción al Observable termine antes de responder
+        await sseObservable.ToTask();
 
-        log.LogInformation("Client disconnected.");
-
-        return new StatusCodeResult((int)HttpStatusCode.OK);
+        return new OkResult();
     }
-
-    private static void NotifyClients(string eventJson)
+    
+    [FunctionName("ReceiveMessage")]
+    public static void Receive(
+        [ServiceBusTrigger("success_order_queue", Connection = "AzureServiceBusConnectionString")] string message,
+        ILogger logger)
     {
-        // Enviar el evento a todos los clientes conectados
-        foreach (var clientStreamWriter in clients)
+        try
         {
-            clientStreamWriter.WriteLine($"data: {eventJson}\n");
-            clientStreamWriter.Flush();
+            logger.LogInformation($"Mensaje recibido: {message}");
+            messageSubject.OnNext(message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al recibir mensajes: {ex.Message}");
         }
     }
 }
