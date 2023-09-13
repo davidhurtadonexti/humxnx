@@ -21,9 +21,9 @@ public static class HandlerEventGrid
 {
     private static readonly Subject<string> messageSubject = new Subject<string>();
     
-    [FunctionName("Consumer")]
+    [FunctionName("Observable")]
     public static async Task<IActionResult>  Consumer(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable{sessionId}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "observable/{sessionId}")] HttpRequest req,
         string sessionId,
         ILogger log)
     {
