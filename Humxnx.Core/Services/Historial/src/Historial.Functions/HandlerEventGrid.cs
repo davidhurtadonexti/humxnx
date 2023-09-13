@@ -80,6 +80,7 @@ public static class ReactiveApiFunction
             await response.WriteAsync("\r\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
+            await response.WriteAsync("\r\n");
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
             
@@ -97,43 +98,28 @@ public static class ReactiveApiFunction
         {
             log.LogInformation($"data: {sessionStateId}", checkSession);
             // if (checkSession)
-            //var checkSessionCreated = SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver);
-
+            var checkSessionExisted = SessionEventStreams.TryGetValue(sessionStateId, out var eventObserver);
+            if(checkSessionExisted){
                 log.LogInformation("dentro de SessionEventStreams");
-                // Suscríbete al flujo de eventos y envía eventos al cliente
-                await chekckEventObserver.ForEachAsync(async (eventData) =>
-                    // while (!req.HttpContext.RequestAborted.IsCancellationRequested)
+                // Crea un Observable a partir del Subject
+                var sseObservable = eventObserver.AsObservable();
+                // Suscríbete al Observable y envía eventos SSE al cliente
+                sseObservable.Subscribe(async sseEvent =>
                 {
-                    try
-                    {
-                        log.LogInformation("fuera de eventData arriba");
-                            if (eventData != null)
-                            {
-                                log.LogInformation("Se levanta el Observador para la SessionID: " + sessionStateId);
-                                var messageData = new { data = eventData };
-                                var eventDataJsons = JsonSerializer.Serialize(messageData);
-
-                                // Escribe los datos JSON seguidos de "\r\n"
-                                await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
-                                await response.Body.FlushAsync();
-                                await response.WriteAsync("\r\n", Encoding.UTF8);
-                                await response.Body.FlushAsync();
-                                await response.Body.FlushAsync();
-                                await response.Body.FlushAsync();
-                                await response.Body.FlushAsync();
-                                log.LogInformation("Escribiendo mensaje para la SessionId: " + sessionStateId);
-                            }
-                            log.LogInformation("fuera de eventData abajo");
-                    }
-                    catch (Exception ex)
-                    {
-                        log.LogError(
-                            $"Error en la transmisión de eventos para la sesión {sessionStateId}: {ex.Message}");
-                        // Puedes manejar la excepción de acuerdo a tus necesidades, como cerrar la conexión o tomar otra acción.
-                    }
+                    var messageEventData = new { data = sseEvent };
+                    var dataJsons = JsonSerializer.Serialize(messageEventData);
+                    // Envía el evento SSE al cliente de forma asincrónica
+                    await response.WriteAsync($"data: {dataJsons}\n\n", Encoding.UTF8);
+                    await response.Body.FlushAsync();
+                    await response.Body.FlushAsync();
+                    await response.WriteAsync("\r\n", Encoding.UTF8);
+                    await response.Body.FlushAsync();
+                    await response.Body.FlushAsync();
+                    await response.WriteAsync("\r\n");
+                    await response.Body.FlushAsync();
+                    await response.Body.FlushAsync();
                 });
-
-
+            }
         }
         catch (Exception ex)
         {
