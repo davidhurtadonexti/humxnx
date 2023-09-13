@@ -55,10 +55,10 @@ public static class HandlerEventGrid
             await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
+            await response.Body.FlushAsync();
             await response.WriteAsync("\r\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
-            await response.WriteAsync("\r\n");
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
             log.LogInformation("Successfully SessionId: " + sessionStateId);
@@ -72,10 +72,10 @@ public static class HandlerEventGrid
             await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
+            await response.Body.FlushAsync();
             await response.WriteAsync("\r\n", Encoding.UTF8);
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
-            await response.WriteAsync("\r\n");
             await response.Body.FlushAsync();
             await response.Body.FlushAsync();
         }
@@ -108,7 +108,10 @@ public static class HandlerEventGrid
                     await response.WriteAsync($"data: {dataJsons}\n\n", Encoding.UTF8);
                     await response.Body.FlushAsync();
                     await response.Body.FlushAsync();
+                    await response.Body.FlushAsync();
                     await response.WriteAsync("\r\n", Encoding.UTF8);
+                    await response.Body.FlushAsync();
+                    await response.Body.FlushAsync();
                     await response.Body.FlushAsync();
                     await response.Body.FlushAsync();
                 });
