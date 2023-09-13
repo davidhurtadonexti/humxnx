@@ -75,12 +75,13 @@ public static class ReactiveApiFunction
             var messageData = new { data = "Stream creado exitosamente con SessionID: "+ sessionStateId};
             var eventDataJsons = JsonSerializer.Serialize(messageData);
             // Escribe los datos JSON seguidos de "\r\n"
-            await client.WriteAsync($"{eventDataJsons}\n\n");
-            await client.FlushAsync();
-            await client.FlushAsync();
-            await client.WriteAsync("\r\n");
-            await client.FlushAsync();
-            await client.FlushAsync();
+            await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
+            await response.Body.FlushAsync();
+            await response.WriteAsync("\r\n", Encoding.UTF8);
+            await response.Body.FlushAsync();
+            await response.Body.FlushAsync();
+            await response.Body.FlushAsync();
+            await response.Body.FlushAsync();
             
             log.LogInformation("Successfully SessionId: " + sessionStateId);
         }
@@ -113,12 +114,13 @@ public static class ReactiveApiFunction
                                 var eventDataJsons = JsonSerializer.Serialize(messageData);
 
                                 // Escribe los datos JSON seguidos de "\r\n"
-                                await client.WriteAsync($"{eventDataJsons}\n\n");
-                                await client.FlushAsync();
-                                await client.FlushAsync();
-                                await client.WriteAsync("\r\n");
-                                await client.FlushAsync();
-                                await client.FlushAsync();
+                                await response.WriteAsync($"data: {eventDataJsons}\n\n", Encoding.UTF8);
+                                await response.Body.FlushAsync();
+                                await response.WriteAsync("\r\n", Encoding.UTF8);
+                                await response.Body.FlushAsync();
+                                await response.Body.FlushAsync();
+                                await response.Body.FlushAsync();
+                                await response.Body.FlushAsync();
                                 log.LogInformation("Escribiendo mensaje para la SessionId: " + sessionStateId);
                             }
                             log.LogInformation("fuera de eventData abajo");
