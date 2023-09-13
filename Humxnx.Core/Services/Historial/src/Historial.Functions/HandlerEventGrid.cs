@@ -86,13 +86,13 @@ public static class ReactiveApiFunction
             
             log.LogInformation("Successfully SessionId: " + sessionStateId);
         }
-        // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
-        response.OnCompleted(() =>
-        {
-            log.LogInformation("dentro de response.OnCompleted sessionStateId:"+ sessionStateId);
-            SessionEventStreams.Remove(sessionStateId);
-            return Task.CompletedTask;
-        });
+        // // Elimina el flujo de eventos de la sesión cuando se cierra la conexión
+        // response.OnCompleted(() =>
+        // {
+        //     log.LogInformation("dentro de response.OnCompleted sessionStateId:"+ sessionStateId);
+        //     SessionEventStreams.Remove(sessionStateId);
+        //     return Task.CompletedTask;
+        // });
 
         try
         {
@@ -128,7 +128,7 @@ public static class ReactiveApiFunction
         }
         finally
         {
-            
+            SessionEventStreams.Remove(sessionStateId);
             clients.Remove(client);
             await client.DisposeAsync();
  
