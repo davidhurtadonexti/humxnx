@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Exceptions\" />
+    <None Remove="Interfaces\" />
+    <None Remove="Logging\" />
+    <None Remove="Token\" />
+    <None Remove="Attributes\" />
+    <None Remove="Messages\" />
+    <None Remove="Security\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+    <Folder Include="Interfaces\" />
+    <Folder Include="Logging\" />
+    <Folder Include="Token\" />
+    <Folder Include="Attributes\" />
+    <Folder Include="Messages\" />
+    <Folder Include="Security\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.32.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Antiforgery" Version="2.2.0" />
+  </ItemGroup>
+</Project>

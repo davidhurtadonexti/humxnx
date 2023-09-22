@@ -1,0 +1,85 @@
+IF NOT EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Clients')
+BEGIN
+	CREATE TABLE Clients (
+		Id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+		Descripcion NVARCHAR (60) NOT NULL,
+		IsActive BIT DEFAULT 1,
+		CreatedAt DateTime DEFAULT GETDATE(),
+		UpdatedAt DateTime,
+		DeletedAt DateTime
+		)
+END
+
+IF NOT EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'ClientServices')
+BEGIN
+	CREATE TABLE ClientServices(
+		Id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+		ClientId UNIQUEIDENTIFIER NOT NULL,
+		PublicKey NVARCHAR(30) NOT NULL UNIQUE,
+		SecretKey NVARCHAR(30) NOT NULL,
+		Descripcion NVARCHAR (60) NOT NULL,
+		ServiceType NVARCHAR (30) NOT NULL,
+		Hosts NVARCHAR(max) NOT NULL,
+		AccesTokenExp NUMERIC NOT NULL,
+		RefreshTokenExp	NUMERIC NOT NULL,
+		IsActive BIT DEFAULT 1,
+		CreatedAt DateTime DEFAULT GETDATE(),
+		UpdatedAt DateTime,
+		DeletedAt DateTime
+	)
+
+	ALTER TABLE ClientServices
+	ADD CONSTRAINT FK_ClientServices_Clients FOREIGN KEY (ClientId) REFERENCES Clients(Id);
+
+END
+
+IF NOT EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Resources')
+BEGIN
+	CREATE TABLE Resources (
+		Id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+		Descripcion NVARCHAR(60) NOT NULL,
+		ResourceUrl NVARCHAR(max) not null,
+		IsActive BIT DEFAULT 1,
+		CreatedAt DateTime DEFAULT GETDATE(),
+		UpdatedAt DateTime,
+		DeletedAt DateTime
+	)
+END
+
+IF NOT EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'SessionPermissions')
+BEGIN
+	CREATE TABLE SessionPermissions (
+		Id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+		ClientServiceId UNIQUEIDENTIFIER NOT NULL,
+		ResourceId UNIQUEIDENTIFIER NOT NULL,
+		ScopePermissions NVARCHAR(4) NOT NULL, /* rwud, r---, -w--, --ud */
+		IsActive BIT DEFAULT 1,
+		CreatedAt DateTime DEFAULT GETDATE(),
+		UpdatedAt DateTime,
+		DeletedAt DateTime
+	)
+
+	ALTER TABLE SessionPermissions
+	ADD CONSTRAINT FK_SessionPermissions_Resources FOREIGN KEY (ResourceId) REFERENCES Resources(Id);
+
+	ALTER TABLE SessionPermissions
+	ADD CONSTRAINT FK_SessionPermissions_ClientService FOREIGN KEY (ClientServiceId) REFERENCES ClientServices(Id);
+END
+
+
+IF NOT EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Authorizations')
+BEGIN
+	CREATE TABLE Authorizations (
+		Id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+		ClientServiceId UNIQUEIDENTIFIER NOT NULL,
+		AuthorizationToken NVARCHAR(max) NOT NULL,
+		RefreshToken NVARCHAR(max) NOT NULL,
+		IsActive BIT DEFAULT 1,
+		CreatedAt DateTime DEFAULT GETDATE(),
+		UpdatedAt DateTime,
+		DeletedAt DateTime
+	)
+
+	ALTER TABLE Authorizations
+	ADD CONSTRAINT FK_Authorizations_ClientService FOREIGN KEY (ClientServiceId) REFERENCES ClientServices(Id);
+END

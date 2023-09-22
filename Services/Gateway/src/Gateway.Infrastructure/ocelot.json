@@ -1,0 +1,86 @@
+{
+    "Routes": [
+        {
+            "DownstreamPathTemplate": "/api/Login/Access",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5100
+                }
+            ],
+            "UpstreamPathTemplate": "/api/auth/Login/Access",
+            "UpstreamHttpMethod": [
+                "POST"
+            ],
+            "SwaggerKey": "auth"
+        },
+        {
+            "DownstreamPathTemplate": "/api/Login/GenerateToken",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5100
+                }
+            ],
+            "UpstreamPathTemplate": "/api/auth/Login/GenerateToken",
+            "UpstreamHttpMethod": [
+                "POST"
+            ],
+            "SwaggerKey": "auth"
+        },
+        {
+            "DownstreamPathTemplate": "/api/Login/ValidateToken",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5100
+                }
+            ],
+            "UpstreamPathTemplate": "/api/auth/Login/ValidateToken",
+            "UpstreamHttpMethod": [
+                "GET"
+            ],
+            "SwaggerKey": "auth"
+        },
+        {
+            "DownstreamPathTemplate": "/api/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5100
+                }
+            ],
+            "UpstreamPathTemplate": "/api/auth/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+            ],
+            "SwaggerKey": "auth",
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "Bearer",
+                "AllowedScopes": []
+            }
+        }
+    ],
+    "GlobalConfiguration": {
+        "BaseUrl": "http://localhost:5297"
+    },
+    "SwaggerEndPoints": [
+        {
+            "Key": "auth",
+            "Config": [
+                {
+                    "Name": "Auth API",
+                    "Version": "v1",
+                    "Url": "http://localhost:5100/swagger/v1/swagger.json"
+                }
+            ]
+        }
+    ]
+}
