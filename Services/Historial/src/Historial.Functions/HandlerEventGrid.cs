@@ -138,7 +138,7 @@ public static class HandlerEventGrid
         try
         {
             QueueMessage messageReceived = JsonSerializer.Deserialize<QueueMessage>(message);
-            logger.LogInformation($"Se captura el mensaje del EventGrid por medio del Service bus: {message}");
+            logger.LogInformation($"Envio al stream reactivo: {message}");
          
             if (SessionEventStreams.TryGetValue(messageReceived.SessionId, out var eventObserver))
             {

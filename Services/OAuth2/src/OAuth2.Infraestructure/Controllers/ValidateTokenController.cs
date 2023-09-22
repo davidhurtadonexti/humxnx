@@ -1,30 +1,34 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Transactions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Transactions;
-
+using OAuth2.OAuth2.Domain.Entities;
+using OAuth2.src.OAuth2.Application.Interfaces;
 using OAuth2.src.OAuth2.Infraestructure.Contracts.RefreshToken;
 using OAuth2.src.OAuth2.Infraestructure.Contracts.ValidateToken;
-using OAuth2.src.OAuth2.Application.Interfaces;
-using System.Linq;
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using OAuth2.OAuth2.Domain.Entities;
 
-namespace OAuth2.src.OAuth2.Infraestructure.Controllers
+namespace OAuth2.OAuth2.Infraestructure.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ValidateTokenController : ControllerBase
     {
-        public IValidateToken _validate;
+        private readonly IValidateToken _validate;
         public ITokenGenerator _tokenGenerator;
 
         public ValidateTokenController(IValidateToken validate, ITokenGenerator tokenGenerator)
         {
             _validate = validate;
             _tokenGenerator = tokenGenerator;
+        }
+
+        public ValidateTokenController()
+        {
+            throw new NotImplementedException();
         }
 
         [HttpPost]
