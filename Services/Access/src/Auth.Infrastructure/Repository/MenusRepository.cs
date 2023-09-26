@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using Auth.Domain.Entities;
-using Auth.Infrastructure.DataBaseContext;
-using Microsoft.EntityFrameworkCore;
-using Auth.Domain.Interfaces;
-using Microsoft.Data.SqlClient;
-using pkg.Exceptions;
 using System.Diagnostics;
 using System.Linq;
+using Access.Auth.Domain.Entities;
+using Access.Auth.Domain.Interfaces;
+using Access.Auth.Infrastructure.DataBaseContext;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using pkg.Exceptions;
 using pkg.Interfaces;
 
-namespace Auth.Infrastructure.Repository
+namespace Access.Auth.Infrastructure.Repository
 {
 	public class MenusRepository : IMenus
 	{

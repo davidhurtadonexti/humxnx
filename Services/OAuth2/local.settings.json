@@ -1,0 +1,25 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=humana83ba;AccountKey=GV6Ti8MmWEunIHT4aCP2GaMstTgDx6Eot2yA8geH9qDZUc0tVCbIT3irQQ73pExHVZpm3hJ4SAE6+AStkax0sw==;EndpointSuffix=core.windows.net",
+        "AzureWebJobsSecretStorageType": "Files",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+        "AzureServiceBusConnectionString": "Endpoint=sb://humana-queue-dev.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=t+5hbC+q9libg/wYqukzSH5iN7MtdgGzN+ASbCgDM78=",
+        "EventGridAttribute.TopicEndpointUri": "https://event-grid-reactive.eastus-1.ts.eventgrid.azure.net",
+        "EventGridAttribute.TopicKeySetting": "UIovk2z197i9BGIb4LXaH469vZpbtCQH7sH97pBdkrQ="
+    },
+    "Host": {
+        "LocalHttpPort": 7071,
+        "CORS": "*",
+        "CORSCredentials": false
+    },
+    "Jwt": {
+        "Key": "5A1E84F5DCAA71B99C773F35D04B88BA",
+        "Issuer": "http://localhost:44381/",
+        "Audience": "http://localhost:44381/"
+    },
+    "ConnectionStrings": {
+        "SQLConnectionString": "Server=209.126.6.112;Database=OAuth2_BD;TrustServerCertificate=True;MultiSubnetFailover=True;Trusted_Connection=False;User Id=sa;Password=ProyectAtQQ!!1;",
+    },
+    "allowSynchronousIO": true
+}

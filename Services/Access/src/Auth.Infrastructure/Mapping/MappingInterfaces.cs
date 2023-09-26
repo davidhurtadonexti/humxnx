@@ -1,7 +1,8 @@
-﻿using Auth.Application.CaseUses;
-using Auth.Domain.Interfaces;
-using Auth.Infrastructure.DataBaseContext;
-using Auth.Infrastructure.Repository;
+﻿using System;
+using Access.Auth.Application.CaseUses;
+using Access.Auth.Domain.Interfaces;
+using Access.Auth.Infrastructure.DataBaseContext;
+using Access.Auth.Infrastructure.Repository;
 using log4net;
 using log4net.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,9 +15,8 @@ using pkg.Interfaces;
 using pkg.Logging;
 using pkg.Security;
 using pkg.Token;
-using System;
 
-namespace Auth.Infrastructure.Mapping
+namespace Access.Auth.Infrastructure.Mapping
 {
     public class MappingInterfaces
 	{

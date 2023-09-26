@@ -2,15 +2,20 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.151" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.22" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.0.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.37" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    <PackageReference Include="NuGet.PackageManagement" Version="6.7.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+    <PackageReference Include="System.Threading.Channels" Version="7.0.0" />
+    <PackageReference Include="Microsoft.NETCore.App" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

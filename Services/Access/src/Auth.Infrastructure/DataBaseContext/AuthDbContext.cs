@@ -1,10 +1,10 @@
-﻿using Auth.Infrastructure.DataBaseContext.Extensions;
-using Auth.Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Access.Auth.Domain.Entities;
+using Access.Auth.Infrastructure.DataBaseContext.Extensions;
+using Access.Auth.Infrastructure.DataBaseContext.Relations;
 using Microsoft.EntityFrameworkCore;
-using Auth.Infrastructure.DataBaseContext.Relations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Auth.Infrastructure.DataBaseContext;
+namespace Access.Auth.Infrastructure.DataBaseContext;
 
 public class AuthDbContext : DbContext
 {

@@ -18,7 +18,7 @@ namespace OAuth2.src.OAuth2.Infraestructure.Repositories.DB
 
         public Connection(IConfiguration configuration)
         {
-            conn = configuration.GetConnectionString("OAuthConnectionString");
+            conn = configuration.GetConnectionString("SQLConnectionString");
         }
         public DbConnection connect()
         {
@@ -39,7 +39,7 @@ namespace OAuth2.src.OAuth2.Infraestructure.Repositories.DB
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw;
             }
         }
 

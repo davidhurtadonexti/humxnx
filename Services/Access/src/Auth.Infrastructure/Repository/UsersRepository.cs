@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using Auth.Domain.Entities;
-using Auth.Domain.Interfaces;
-using Auth.Infrastructure.DataBaseContext;
+using Access.Auth.Domain.Entities;
+using Access.Auth.Domain.Interfaces;
+using Access.Auth.Infrastructure.DataBaseContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pkg.Exceptions;
 using pkg.Interfaces;
 
-namespace Auth.Infrastructure.Repository
+namespace Access.Auth.Infrastructure.Repository
 {
 	public class UsersRepository : IUsers
 	{

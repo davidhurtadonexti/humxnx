@@ -1,8 +1,7 @@
-﻿using System;
-using Auth.Domain.Entities;
+﻿using Access.Auth.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Auth.Infrastructure.DataBaseContext.Relations
+namespace Access.Auth.Infrastructure.DataBaseContext.Relations
 {
 	public class RelationsBase
     {

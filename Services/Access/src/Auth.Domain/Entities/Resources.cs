@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace Auth.Domain.Entities
+namespace Access.Auth.Domain.Entities
 {
     [Table("Resources")]
     //example: scheme

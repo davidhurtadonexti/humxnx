@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Auth.Domain.Entities;
-using Auth.Domain.Interfaces;
-using Auth.Infrastructure.DataBaseContext;
+using Access.Auth.Domain.Entities;
+using Access.Auth.Domain.Interfaces;
+using Access.Auth.Infrastructure.DataBaseContext;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using pkg.Exceptions;
 using pkg.Interfaces;
-using LoginEntity = Auth.Domain.Entities.LoginSP;
-namespace Auth.Infrastructure.Repository
+using LoginEntity = Access.Auth.Domain.Entities.LoginSP;
+namespace Access.Auth.Infrastructure.Repository
 {
 	public class LoginRepository : ILogin
     {

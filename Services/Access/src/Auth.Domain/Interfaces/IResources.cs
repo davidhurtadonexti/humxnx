@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Auth.Domain.Entities;
+using Access.Auth.Domain.Entities;
 
-namespace Auth.Domain.Interfaces
+namespace Access.Auth.Domain.Interfaces
 {
 	public interface IResources
 	{

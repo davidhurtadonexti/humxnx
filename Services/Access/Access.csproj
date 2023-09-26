@@ -7,11 +7,15 @@
     <None Include="src\Auth.Application\Auth.Application.csproj" />
     <None Include="src\Auth.Domain\Auth.Domain.csproj" />
     <None Include="src\Auth.Infrastructure\Auth.Infrastructure.csproj" />
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="IKVM" Version="8.6.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.22" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.19.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.ServiceBus" Version="4.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
@@ -19,6 +23,7 @@
     <PackageReference Include="Microsoft.IdentityModel.Protocols" Version="7.0.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utils\Utils.csproj" />

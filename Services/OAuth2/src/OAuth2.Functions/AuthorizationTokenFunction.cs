@@ -22,14 +22,16 @@ namespace Humxnx.OAuth2.Core.Functions
 
         [FunctionName("AuthorizationToken")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "authorizationToken")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "authorization-token")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("AuthorizationToken trigger function invoked.");
+
             
             var requestBody = new StreamReader(req.Body).ReadToEnd();
-
-            return await _method.Post(JsonConvert.DeserializeObject<GetTokenInput>(requestBody));
+            var requestBodyString = JsonConvert.DeserializeObject<GetTokenInput>(requestBody);
+      
+            return await _method.Post(requestBodyString);
         }
     }
 }

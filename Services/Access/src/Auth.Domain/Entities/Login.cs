@@ -1,8 +1,7 @@
 ﻿#nullable enable
 using System;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Auth.Domain.Entities
+namespace Access.Auth.Domain.Entities
 {
 	public class Login
 	{

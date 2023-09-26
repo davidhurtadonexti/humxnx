@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Auth.Application.CaseUses;
-using Auth.Domain.Entities;
+using Access.Auth.Application.CaseUses;
+using Access.Auth.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using pkg.Exceptions;
 using pkg.Interfaces;
 using static pkg.Attributes.General;
 
-namespace Auth.Infrastructure.Controllers;
+namespace Access.Auth.Infrastructure.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

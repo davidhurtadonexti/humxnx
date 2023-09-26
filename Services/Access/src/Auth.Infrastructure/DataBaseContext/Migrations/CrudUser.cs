@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Auth.Infrastructure.DataBaseContext.Migrations
+namespace Access.Auth.Infrastructure.DataBaseContext.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
     [Migration("CustomMigration_CrudUser")]

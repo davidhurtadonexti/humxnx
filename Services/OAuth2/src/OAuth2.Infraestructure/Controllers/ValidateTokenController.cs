@@ -1,34 +1,31 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Transactions;
-using Microsoft.AspNetCore.Http;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using OAuth2.OAuth2.Domain.Entities;
-using OAuth2.src.OAuth2.Application.Interfaces;
+using System.Transactions;
+
 using OAuth2.src.OAuth2.Infraestructure.Contracts.RefreshToken;
 using OAuth2.src.OAuth2.Infraestructure.Contracts.ValidateToken;
+using OAuth2.src.OAuth2.Application.Interfaces;
+using System.Linq;
+using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using OAuth2.OAuth2.Domain.Entities;
+using JwtSecurityToken = System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
 
-namespace OAuth2.OAuth2.Infraestructure.Controllers
+namespace OAuth2.src.OAuth2.Infraestructure.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ValidateTokenController : ControllerBase
     {
-        private readonly IValidateToken _validate;
+        public IValidateToken _validate;
         public ITokenGenerator _tokenGenerator;
 
         public ValidateTokenController(IValidateToken validate, ITokenGenerator tokenGenerator)
         {
             _validate = validate;
             _tokenGenerator = tokenGenerator;
-        }
-
-        public ValidateTokenController()
-        {
-            throw new NotImplementedException();
         }
 
         [HttpPost]
@@ -45,7 +42,8 @@ namespace OAuth2.OAuth2.Infraestructure.Controllers
 
                 //*********************************** validar TOKEN ************************************
                 JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-                var jsonToken = handler.ReadToken(authorizationToken);JwtSecurityToken tokenS = jsonToken as JwtSecurityToken;
+                var jsonToken = handler.ReadToken(authorizationToken);
+                JwtSecurityToken tokenS = jsonToken as JwtSecurityToken;
                 string authorizationId = tokenS.Claims.First(claim => claim.Type == "AuthorizationToken").Value;
                 string accessToken = tokenS.Claims.First(claim => claim.Type == "AccessToken").Value;
 

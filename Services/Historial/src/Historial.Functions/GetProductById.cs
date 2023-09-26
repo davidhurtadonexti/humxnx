@@ -1,4 +1,6 @@
 using System;
+using Humxnx.Historial.Core.Application.Interfaces;
+using Humxnx.Historial.Core.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -9,6 +11,14 @@ namespace Humxnx.Historial.Core.Functions
 {
     public static class GetProductById
     {
+        
+         private static IServicioBase<Producto,Guid> _productService;
+
+        public static void ProductoCntroller(IServicioBase<Producto,Guid> productService)
+        {
+            _productService = productService;
+        }
+        
         [FunctionName("GetProductById")]
         public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "products/{id}")] HttpRequest req,
@@ -17,9 +27,8 @@ namespace Humxnx.Historial.Core.Functions
         {
             log.LogInformation("GetProductById HTTP trigger function invoked.");
             
-            var product = new ProductoController();
 
-            return new OkObjectResult(product.Get(id));
+            return new OkObjectResult(_productService.SeleccionarPorID(id));
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-namespace Auth.Infrastructure.Mapping
+﻿namespace Access.Auth.Infrastructure.Mapping
 {
 	public class MappingPolicies
 	{

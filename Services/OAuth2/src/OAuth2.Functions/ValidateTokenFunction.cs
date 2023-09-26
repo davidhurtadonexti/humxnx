@@ -6,8 +6,8 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using OAuth2.OAuth2.Infraestructure.Controllers;
 using OAuth2.src.OAuth2.Infraestructure.Contracts.ValidateToken;
+using OAuth2.src.OAuth2.Infraestructure.Controllers;
 
 namespace OAuth2.OAuth2.Functions
 {
@@ -29,7 +29,6 @@ namespace OAuth2.OAuth2.Functions
             var requestBody = new StreamReader(req.Body).ReadToEnd();
 
             return await _method.Post(JsonConvert.DeserializeObject<ValidateTokenInput>(requestBody), req);
-            //return null;
         }
     }
 }

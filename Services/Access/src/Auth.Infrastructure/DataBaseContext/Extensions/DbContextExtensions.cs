@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
-namespace Auth.Infrastructure.DataBaseContext.Extensions
+namespace Access.Auth.Infrastructure.DataBaseContext.Extensions
 {
     internal static class DbContextExtensions
     {

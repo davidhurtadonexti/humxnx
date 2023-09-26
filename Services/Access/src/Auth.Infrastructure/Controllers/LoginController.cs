@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
-using Auth.Domain.Entities;
+using Access.Auth.Application.CaseUses;
+using Access.Auth.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using pkg.Attributes;
 using pkg.Exceptions;
 using pkg.Interfaces;
 using static pkg.Attributes.General;
-using Auth.Application.CaseUses;
 
-namespace Auth.Infrastructure.Controllers;
+namespace Access.Auth.Infrastructure.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class LoginController : ControllerBase
@@ -41,11 +41,6 @@ public class LoginController : ControllerBase
         _usersServiceHandler = usersServiceHandler;
         _tokensServiceHandler = tokensServiceHandler;
 
-    }
-
-    public LoginController()
-    {
-        throw new NotImplementedException();
     }
 
     [HttpPost("Access")]
@@ -108,7 +103,7 @@ public class LoginController : ControllerBase
     }
 
     [HttpGet("LoadGrants")]
-    public ActionResult<ResponseData<Token>> LoadGrants()
+    public IActionResult LoadGrants()
     {
         try
         {

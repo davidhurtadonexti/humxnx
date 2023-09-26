@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Auth.Domain.Entities;
-using Auth.Domain.Interfaces;
+using Access.Auth.Domain.Entities;
+using Access.Auth.Domain.Interfaces;
 
-namespace Auth.Application.CaseUses
+namespace Access.Auth.Application.CaseUses
 {
 	public class ResourcesServiceHandler
 	{
